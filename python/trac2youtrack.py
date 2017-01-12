@@ -334,10 +334,13 @@ def trac2youtrack(target_url, target_login, target_password, project_ID, project
     trac_resolution_to_yt_state = lambda track_field, yt_bundle : to_youtrack_state(track_field, yt_bundle)
     create_yt_bundle_custom_field(target, project_ID, "Resolution", client.get_issue_resolutions(), trac_resolution_to_yt_state)
 
-    trac_versions = client.get_versions()
     trac_version_to_yt_version = lambda trac_field, yt_bundle : to_youtrack_version(trac_field, yt_bundle)
-    create_yt_bundle_custom_field(target, project_ID, "Version", trac_versions, trac_version_to_yt_version)
-    #create_yt_bundle_custom_field(target, project_ID, "Affected versions", trac_versions, trac_version_to_yt_version)
+
+    trac_versions = client.get_versions()
+    create_yt_bundle_custom_field(target, project_ID, "Affected versions", trac_versions, trac_version_to_yt_version)
+
+    trac_milestones = client.get_milestones()
+    create_yt_bundle_custom_field(target, project_ID, "Fix versions", trac_milestones, trac_version_to_yt_version)
 
     trac_components = client.get_components()
     for cmp in trac_components :
