@@ -7,7 +7,7 @@ from tracLib.client import Client
 import youtrack
 import sys
 import tracLib
-import tracLib.defaultTrac
+import tracLib.dfstudioTrac
 import youtrack.connection
 from youtrack.importHelper import *
 
