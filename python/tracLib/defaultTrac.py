@@ -57,7 +57,13 @@ tracLib.FIELD_TYPES = {
     "Assignee"          :   "user[1]",
     "Severity"          :   "enum[1]",
     "YT Select"         :   "enum[*]",
-    "Subsystem"         :   "ownedField[1]"
+    "Subsystem"         :   "ownedField[1]",
+    "Milestone"         :   "enum[1]",
+    "Release_notes_status" : "enum[1]",
+    "Dftype"            :    "enum[1]",
+    "Instance"          :    "enum[1]",
+    "Dfqa"              :    "enum[1]"
+    #"Last_commit_rev"   :    "string"
 }
 
 tracLib.FIELD_NAMES = {

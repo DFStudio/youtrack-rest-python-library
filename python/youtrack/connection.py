@@ -402,9 +402,9 @@ class Connection(object):
                             for v in attrValue:
                                 if isinstance(v, unicode):
                                     v = v.encode('utf-8')
-                                record += '      <value>' + escape(v.strip()) + '</value>\n'
+                                record += '      <value>' + escape(v.strip(), {"\r":"", "\x02":"", "{{{":"```", "}}}":"```"}) + '</value>\n'
                         else:
-                            record += '      <value>' + escape(attrValue.strip()) + '</value>\n'
+                            record += '      <value>' + escape(attrValue.strip(), {"\r":"", "\x02":"", "{{{":"```", "}}}":"```"}) + '</value>\n'
                         record += '    </field>\n'
 
             if comments:
@@ -416,7 +416,7 @@ class Connection(object):
                             ca = ca.encode('utf-8')
                         if isinstance(val, unicode):
                             val = val.encode('utf-8')
-                        record += ' ' + ca + '=' + quoteattr(val, {"\n" : "&#xA;"})
+                        record += ' ' + ca + '=' + quoteattr(val, {"\n" : "&#xA;", "\r" : "", "\x02":""})
                     record += '/>\n'
 
             record += '  </issue>\n'
@@ -445,8 +445,8 @@ class Connection(object):
         try:
             response = result.toxml().encode('utf-8')
         except:
-            sys.stderr.write("can't parse response")
-            sys.stderr.write("request was")
+            sys.stderr.write("can't parse response\n")
+            sys.stderr.write("request was\n")
             sys.stderr.write(xml)
             return response
         item_elements = minidom.parseString(response).getElementsByTagName("item")
@@ -459,6 +459,11 @@ class Connection(object):
                 if imported == "true":
                     print "Issue [ %s-%s ] imported successfully" % (projectId, id)
                 else:
+                    error = item.getElementsByTagName('error')[0]
+                    if error is not None and error.attributes["fieldName"] is not None and error.attributes["fieldName"].value == "numberInProject" and error.firstChild.nodeValue == "Value is not unique":
+                        sys.stderr.write("Issue %s already imported (skipping)\n" % id)
+                        continue # do not dump full item when skipping redundant entry
+                    sys.stderr.write("ERROR IMPORTING %s\n" % id)
                     sys.stderr.write("")
                     sys.stderr.write("Failed to import issue [ %s-%s ]." % (projectId, id))
                     sys.stderr.write("Reason : ")

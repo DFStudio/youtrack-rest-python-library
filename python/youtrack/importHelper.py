@@ -142,15 +142,28 @@ def add_values_to_bundle_safe(connection, bundle, values):
         YouTrackException: if something is wrong with queries.
     """
     for value in values:
-        try:
-            connection.addValueToBundle(bundle, value)
-        except YouTrackException, e:
-            if e.response.status == 409:
-                print "Value with name [ %s ] already exists in bundle [ %s ]" % \
-                      (utf8encode(value.name), utf8encode(bundle.name))
-            else:
-                raise e
+        add_value_to_bundle_safe(connection, bundle, value)
 
+def add_value_to_bundle_safe(connection, bundle, value):
+    """
+    Adds the given value to the specified bundle, if it does not yet exist in bundle.
+
+    Args:
+        connection: An opened Connection instance.
+        bundle: Bundle instance to add values to.
+        value: Value that should be added to bundle.
+
+    Raises:
+        YouTrackException: if something is wrong with queries.
+    """
+    try:
+        connection.addValueToBundle(bundle, value)
+    except YouTrackException, e:
+        if e.response.status == 409:
+            print "Value with name [ %s ] already exists in bundle [ %s ]" % \
+                  (utf8encode(value.name), utf8encode(bundle.name))
+        else:
+            raise e
 
 def create_bundle_safe(connection, bundle_name, bundle_type):
     bundle = connection.bundle_types[bundle_type[0:-3]](None, None)

@@ -170,7 +170,7 @@ def to_youtrack_issue(project_ID, trac_issue, check_box_fields):
 
 
 def to_youtrack_version(trac_version, yt_bundle):
-    """"
+    """
     This method converts trac version to YT version.
 
     Args:
@@ -180,7 +180,7 @@ def to_youtrack_version(trac_version, yt_bundle):
     Returns:
         YT version that has same name, description and release date as trac version.
         New version is released and not archived.
-    """""
+    """
     version = yt_bundle.createElement(trac_version.name)
     version.isReleased = (trac_version.time is not None)
     version.isArchived = False
@@ -315,6 +315,42 @@ def create_yt_bundle_custom_field(target, project_id, field_name, trac_field_val
         values_to_add.append(trac_field_to_youtrack_field(field, field_bundle))
     add_values_to_bundle_safe(target, field_bundle, values_to_add)
 
+def experimentalFieldExtraction(client, target, project_ID, check_box_fields):
+    print "EXPERIMENTAL =========================="
+
+    # youtrack/connection.py importIssues has an ignore list (bad_fields),
+    # but it seems like we want to ignore all lower-case attributes here
+
+    trac_issues = client.get_issues()
+    inserted = {}
+    for issue in trac_issues:
+        print "Issue %s" % issue.id
+        yt_issue = to_youtrack_issue(project_ID, issue, check_box_fields)
+        #print yt_issue
+        bundler = lambda trac_field, yt_bundle : yt_bundle.createElement(trac_field.name)
+        for attr in yt_issue:
+            if (attr is None or attr[0].islower()):
+                continue
+            if (attr == "Assignee" or attr == "Last_commit_rev"):
+                continue
+            field_values = [CustomField(yt_issue[attr])]
+            if (attr == "Milestone"):
+                attr = "Fix versions"
+            if (attr == "Version"):
+                attr = "Affected versions"
+            value = field_values[0].name
+            if (value in inserted[attr]):
+                print "   Skipping %s : %s" % (attr, value)
+                continue
+            inserted[attr].append(value)
+            print "   %s : %s" % (attr, value)
+            create_yt_bundle_custom_field(target, project_ID, attr, field_values, bundler)
+
+    print "======================================="
+
+class CustomField(object):
+    def __init__(self, name):
+        self.name = name
 
 def trac2youtrack(target_url, target_login, target_password, project_ID, project_name, env_path):
     # creating connection to trac to import issues to
@@ -397,13 +433,18 @@ def trac2youtrack(target_url, target_login, target_password, project_ID, project
             field_type = tracLib.FIELD_TYPES[field_name]
 
         process_custom_field(target, project_ID, field_type, field_name, trac_values_to_youtrack_values(field_name, values))
-        print "Creating project custom fields finished"
+        print "Finished processing custom field [ %s ]" % elem.name
+
+    print "Creating project custom fields finished"
+
+    experimentalFieldExtraction(client, target, project_ID, check_box_fields)
 
     print "Importing issues"
     trac_issues = client.get_issues()
     yt_issues = list([])
     counter = 0
-    max = 100
+    #max = 100
+    max = 1
     for issue in trac_issues:
         print "Processing issue [ %s ]" % (str(issue.id))
         counter += 1
@@ -428,9 +469,11 @@ def trac2youtrack(target_url, target_login, target_password, project_ID, project
         yt_issues.append(to_youtrack_issue(project_ID, issue, check_box_fields))
         if counter == max:
             counter = 0
-            print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
+            #print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
+            target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
             yt_issues = list([])
-    print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
+    #print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
+    target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
     print 'Importing issues finished'
     #importing tags
     print "Importing keywords"
