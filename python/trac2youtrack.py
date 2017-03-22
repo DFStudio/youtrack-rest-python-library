@@ -8,7 +8,7 @@ import youtrack
 import re
 import sys
 import tracLib
-import tracLib.defaultTrac
+import tracLib.dfstudioTrac
 import youtrack.connection
 from youtrack.importHelper import *
 
@@ -158,7 +158,8 @@ def to_youtrack_issue(project_ID, trac_issue, check_box_fields):
             if (value is not None) and (value.strip() != ""):
                 issue[cf] = value
 
-    # handle special case of status:closed / resolution:fixed
+
+    # handle special case of status:closed / resolution:fixed, set to Verified
     if (custom_fields["Status"] is not None) and (custom_fields["Status"] == "closed"):
         if (custom_fields["Resolution"] is not None) and (custom_fields["Resolution"] == "fixed"):
             issue["State"] = "Verified"
@@ -206,9 +207,8 @@ def to_youtrack_comment(project_ID, trac_comment):
     else:
         comment.author = trac_comment.author
 
+    #translate Trac wiki ticket link format to YouTrack id format
     comment.text = trac_comment.content
-
-    # translate Trac wiki ticket link format to YouTrack id format
     comment.text = re.sub(r'\#(\d+)', project_ID+'-'+r'\1', comment.text)
 
     # translate trac preformatted blocks, {{{ and }}}
@@ -469,11 +469,9 @@ def trac2youtrack(target_url, target_login, target_password, project_ID, project
         yt_issues.append(to_youtrack_issue(project_ID, issue, check_box_fields))
         if counter == max:
             counter = 0
-            #print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
-            target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
+            print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
             yt_issues = list([])
-    #print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
-    target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
+    print target.importIssues(project_ID, project_name + ' Assignees', yt_issues)
     print 'Importing issues finished'
     #importing tags
     print "Importing keywords"
