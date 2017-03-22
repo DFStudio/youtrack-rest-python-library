@@ -211,9 +211,11 @@ def to_youtrack_comment(project_ID, trac_comment):
     comment.text = trac_comment.content
     comment.text = re.sub(r'\#(\d+)', project_ID+'-'+r'\1', comment.text)
 
+    # special CommitTicketReference block, replace with inner content (skip braces and #! line)
+    comment.text = re.sub(r'{{{\s*#!CommitTicketReference.*?\n(.*?)}}}', r'\1', comment.text, flags=re.DOTALL)
+
     # translate trac preformatted blocks, {{{ and }}}
     # opening tag done as two lines for python 2.7 that doesn't really support optional capture group
-    comment.text = re.sub(r'{{{\s*#!(\w+)', r'```\1', comment.text)
     comment.text = re.sub(r'{{{', r'```', comment.text)
     comment.text = re.sub(r'}}}', r'```', comment.text)
 
@@ -338,7 +340,10 @@ def experimentalFieldExtraction(client, target, project_ID, check_box_fields):
                 attr = "Fix versions"
             if (attr == "Version"):
                 attr = "Affected versions"
+            # try to insert each attr:value pair only once (performance optimization)
             value = field_values[0].name
+            if (attr not in inserted):
+                inserted[attr] = []
             if (value in inserted[attr]):
                 print "   Skipping %s : %s" % (attr, value)
                 continue

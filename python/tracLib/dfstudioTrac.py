@@ -57,7 +57,11 @@ tracLib.FIELD_TYPES = {
     "Affected versions" :   "version[*]",
     "Assignee"          :   "user[1]",
     "Severity"          :   "enum[1]",
-    "Subsystem"         :   "ownedField[1]"
+    "Subsystem"         :   "ownedField[1]",
+    "Release_notes_status" : "enum[1]", # temporary legacy field
+    "Dftype"            :    "enum[1]", # temporary legacy field
+    "Instance"          :    "enum[1]", # temporary legacy field
+    "Dfqa"              :    "enum[1]"  # temporary legacy field
 }
 
 tracLib.FIELD_NAMES = {
